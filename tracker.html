@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyHabit - Tracker</title>
+    <style>
+        /* Modern UI Variables & Reset */
+        :root {
+            --bg-base: #0f172a;
+            --bg-surface: #1e293b;
+            --bg-surface-hover: #334155;
+            --accent: #6366f1;
+            --accent-hover: #4f46e5;
+            --danger: #ef4444;
+            --danger-hover: #dc2626;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --border: #334155;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-base);
+            color: var(--text-primary);
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 480px; /* Mobile optimized */
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 28px;
+            font-weight: 800;
+            background: linear-gradient(to right, #818cf8, #c084fc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-top: 20px;
+        }
+
+        /* Input Controls */
+        .controls-card {
+            background-color: var(--bg-surface);
+            padding: 20px;
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        input[type="text"], input[type="datetime-local"], textarea {
+            width: 100%;
+            padding: 14px 16px;
+            background-color: var(--bg-base);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: var(--text-primary);
+            font-size: 16px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        input:focus, textarea:focus {
+            border-color: var(--accent);
+        }
+
+        /* Forcing datetime icon to be visible on dark mode */
+        ::-webkit-calendar-picker-indicator {
+            filter: invert(1);
+            cursor: pointer;
+        }
+
+        button {
+            padding: 14px 20px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.1s;
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        .btn-primary {
+            background-color: var(--accent);
+            color: white;
+            width: 100%;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--accent-hover);
+        }
+
+        .btn-danger {
+            background-color: transparent;
+            color: var(--danger);
+            border: 1px solid var(--danger);
+            margin-top: 10px;
+            width: 100%;
+        }
+
+        .btn-danger:hover {
+            background-color: rgba(239, 68, 68, 0.1);
+        }
+
+        /* Habit List & Cards */
+        .habit-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .habit-card {
+            background-color: var(--bg-surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .habit-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .habit-name {
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .delete-btn {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 24px;
+            padding: 0;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .delete-btn:hover {
+            color: var(--danger);
+        }
+
+        .timer {
+            font-size: 28px;
+            font-variant-numeric: tabular-nums;
+            font-weight: 800;
+            text-align: center;
+            padding: 16px;
+            background-color: rgba(0,0,0,0.2);
+            border-radius: 12px;
+            letter-spacing: 1px;
+        }
+
+        .timer span {
+            font-size: 14px;
+            color: var(--text-secondary);
+            font-weight: 500;
+            letter-spacing: normal;
+        }
+
+        /* History Section */
+        .history-section {
+            background-color: rgba(0,0,0,0.15);
+            border-radius: 10px;
+            padding: 12px;
+            margin-top: 8px;
+        }
+
+        .history-title {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .history-item {
+            font-size: 14px;
+            padding: 8px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .history-item:last-child {
+            border-bottom: none;
+        }
+
+        .history-date {
+            color: var(--accent);
+            font-size: 12px;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        /* Modal / Pop-up Styling */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal-content {
+            background-color: var(--bg-surface);
+            width: 100%;
+            max-width: 400px;
+            padding: 24px;
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            transform: translateY(20px);
+            transition: transform 0.2s;
+        }
+
+        .modal-overlay.active .modal-content {
+            transform: translateY(0);
+        }
+
+        .modal-content h3 {
+            color: var(--danger);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn-cancel {
+            background-color: var(--bg-surface-hover);
+            color: white;
+            flex: 1;
+        }
+
+        .btn-confirm {
+            background-color: var(--danger);
+            color: white;
+            flex: 1;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        <h1>MyHabit</h1>
+        
+        <div class="controls-card">
+            <input type="text" id="habitInput" placeholder="What are you quitting?" autocomplete="off">
+            <label style="font-size: 14px; color: var(--text-secondary);">When did you quit?</label>
+            <input type="datetime-local" id="habitStart">
+            <button class="btn-primary" onclick="addHabit()">Take control</button>
+        </div>
+
+        <div class="habit-list" id="habitList">
+            </div>
+    </div>
+
+    <div class="modal-overlay" id="relapseModal">
+        <div class="modal-content">
+            <h3>Log a Relapse</h3>
+            <p style="font-size: 14px; color: var(--text-secondary);">It's a bump in the road, not the end of the journey. What happened? How are you feeling?</p>
+            <textarea id="relapseNote" placeholder="E.g., I was feeling stressed after work..."></textarea>
+            <div class="modal-actions">
+                <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+                <button class="btn-confirm" onclick="confirmRelapse()">Reset Timer</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Data Structure: habits will now hold history logs as well
+        let habits = JSON.parse(localStorage.getItem('habitsV2')) || [];
+        let activeRelapseId = null;
+
+        function saveHabits() {
+            localStorage.setItem('habitsV2', JSON.stringify(habits));
+        }
+
+        function addHabit() {
+            const nameInput = document.getElementById('habitInput');
+            const dateInput = document.getElementById('habitStart');
+            
+            const habitName = nameInput.value.trim();
+            if (habitName === "") return;
+
+            // Use selected date, or fall back to current time
+            let startTime = Date.now();
+            if (dateInput.value) {
+                startTime = new Date(dateInput.value).getTime();
+            }
+
+            const newHabit = {
+                id: Date.now(),
+                name: habitName,
+                startTime: startTime,
+                history: [] // Array to store past relapse dates and notes
+            };
+
+            habits.push(newHabit);
+            saveHabits();
+            
+            nameInput.value = "";
+            dateInput.value = "";
+            renderHabits();
+        }
+
+        function deleteHabit(id) {
+            if (confirm("Are you sure you want to delete this tracker entirely?")) {
+                habits = habits.filter(habit => habit.id !== id);
+                saveHabits();
+                renderHabits();
+            }
+        }
+
+        // --- Modal Logic ---
+        function openRelapseModal(id) {
+            activeRelapseId = id;
+            document.getElementById('relapseNote').value = '';
+            document.getElementById('relapseModal').classList.add('active');
+        }
+
+        function closeModal() {
+            activeRelapseId = null;
+            document.getElementById('relapseModal').classList.remove('active');
+        }
+
+        function confirmRelapse() {
+            const note = document.getElementById('relapseNote').value.trim();
+            const habit = habits.find(h => h.id === activeRelapseId);
+            
+            if (habit) {
+                // Save the current run to history before resetting
+                habit.history.unshift({ // unshift adds to the top of the array
+                    date: Date.now(),
+                    note: note || "No notes provided."
+                });
+                
+                // Reset the timer to right now
+                habit.startTime = Date.now();
+                saveHabits();
+                renderHabits();
+            }
+            
+            closeModal();
+        }
+
+        // --- Time formatting ---
+        function calculateTimePassed(startTime) {
+            const now = Date.now();
+            let diff = now - startTime;
+            
+            // Prevent negative time if user picks a future date
+            if (diff < 0) diff = 0; 
+
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+            const minutes = Math.floor((diff / 1000 / 60) % 60);
+            const seconds = Math.floor((diff / 1000) % 60);
+
+            // Pad single digits with zero (e.g., 05 instead of 5)
+            const pad = (num) => num.toString().padStart(2, '0');
+
+            return `${days}<span>d</span> ${pad(hours)}<span>h</span> ${pad(minutes)}<span>m</span> ${pad(seconds)}<span>s</span>`;
+        }
+
+        // --- Rendering ---
+        function renderHabits() {
+            const listElement = document.getElementById('habitList');
+            listElement.innerHTML = '';
+
+            if (habits.length === 0) {
+                listElement.innerHTML = '<div style="text-align:center; color: var(--text-secondary); margin-top: 20px;">No trackers yet. Add one above!</div>';
+                return;
+            }
+
+            habits.forEach(habit => {
+                const card = document.createElement('div');
+                card.className = 'habit-card';
+                
+                // Generate History HTML if it exists
+                let historyHTML = '';
+                if (habit.history && habit.history.length > 0) {
+                    const historyItems = habit.history.map(entry => {
+                        const dateStr = new Date(entry.date).toLocaleDateString('en-US', { 
+                            month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+                        });
+                        return `
+                            <div class="history-item">
+                                <span class="history-date">${dateStr}</span>
+                                <span>${entry.note}</span>
+                            </div>
+                        `;
+                    }).join('');
+
+                    historyHTML = `
+                        <div class="history-section">
+                            <div class="history-title">Relapse Journal</div>
+                            ${historyItems}
+                        </div>
+                    `;
+                }
+                
+                card.innerHTML = `
+                    <div class="habit-header">
+                        <span class="habit-name">${habit.name}</span>
+                        <button class="delete-btn" onclick="deleteHabit(${habit.id})" title="Delete Tracker">&times;</button>
+                    </div>
+                    <div class="timer" id="timer-${habit.id}">
+                        ${calculateTimePassed(habit.startTime)}
+                    </div>
+                    ${historyHTML}
+                    <button class="btn-danger" onclick="openRelapseModal(${habit.id})">I Relapsed</button>
+                `;
+                
+                listElement.appendChild(card);
+            });
+        }
+
+        // Update timers every second
+        setInterval(() => {
+            habits.forEach(habit => {
+                const timerElement = document.getElementById(`timer-${habit.id}`);
+                if (timerElement) {
+                    timerElement.innerHTML = calculateTimePassed(habit.startTime);
+                }
+            });
+        }, 1000);
+
+        // Initial render
+        renderHabits();
+    </script>
+</body>
+</html>
