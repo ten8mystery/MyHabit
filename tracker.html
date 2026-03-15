@@ -4,13 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MyHabit</title>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
         :root {
             --bg: #09090b;
             --surface: #18181b;
             --surface-raised: #27272a;
             --brand: #6366f1;
-            --brand-glow: rgba(99, 102, 241, 0.2);
+            --brand-glow: rgba(99, 102, 241, 0.3);
             --danger: #ef4444;
             --danger-glow: rgba(239, 68, 68, 0.15);
             --success: #10b981;
@@ -26,12 +27,20 @@
         body {
             font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
             background-color: var(--bg);
-            background-image: radial-gradient(circle at 50% 0%, #1e1b4b 0%, transparent 50%);
             color: var(--text-main);
             display: flex;
             justify-content: center;
             min-height: 100vh;
-            padding: 24px 16px;
+            padding: 32px 16px;
+            overflow-x: hidden;
+        }
+
+        /* Animated Background Particles */
+        #bg-canvas {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: -1;
+            background: radial-gradient(circle at 50% 0%, #1e1b4b 0%, #09090b 70%);
         }
 
         .container {
@@ -40,118 +49,108 @@
             display: flex;
             flex-direction: column;
             gap: 32px;
+            position: relative;
         }
 
-        header {
-            text-align: center;
-            margin-top: 10px;
-        }
-
+        header { text-align: center; }
         header h1 {
-            font-size: 2.5rem;
-            font-weight: 800;
-            letter-spacing: -0.02em;
+            font-size: 2.8rem;
+            font-weight: 900;
+            letter-spacing: -0.03em;
             background: linear-gradient(135deg, #818cf8, #c084fc);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 0 15px var(--brand-glow));
         }
 
         .glass-panel {
-            background: rgba(24, 24, 27, 0.7);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
+            background: rgba(24, 24, 27, 0.8);
+            backdrop-filter: blur(16px);
             border: 1px solid var(--ring);
             border-radius: var(--radius-lg);
             padding: 24px;
             display: flex;
             flex-direction: column;
-            gap: 16px;
-            box-shadow: 0 4px 24px rgba(0,0,0,0.2);
+            gap: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
 
-        .input-group { display: flex; flex-direction: column; gap: 6px; }
-        .input-group label { font-size: 0.85rem; color: var(--text-muted); font-weight: 500; }
+        .input-group { display: flex; flex-direction: column; gap: 8px; }
+        .input-group label { font-size: 0.8rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
 
-        input, textarea {
+        input {
             width: 100%;
-            padding: 12px 16px;
-            background-color: rgba(9, 9, 11, 0.5);
+            padding: 14px;
+            background-color: rgba(9, 9, 11, 0.6);
             border: 1px solid var(--ring);
             border-radius: var(--radius-md);
             color: var(--text-main);
             font-size: 1rem;
             outline: none;
+            transition: all 0.2s;
         }
-
         input:focus { border-color: var(--brand); box-shadow: 0 0 0 3px var(--brand-glow); }
 
-        button {
-            padding: 14px 24px;
-            border: none;
+        .btn-primary {
+            background: linear-gradient(135deg, var(--brand), #818cf8);
+            color: white;
+            padding: 16px;
             border-radius: var(--radius-md);
-            font-size: 1rem;
-            font-weight: 600;
+            font-weight: 700;
+            border: none;
             cursor: pointer;
-            transition: all 0.2s;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
+            font-size: 1rem;
+            box-shadow: 0 4px 15px var(--brand-glow);
         }
 
-        .btn-primary { background: linear-gradient(135deg, var(--brand), #818cf8); color: white; }
-        .btn-primary:hover { filter: brightness(1.1); }
-        .btn-danger-outline { background: transparent; color: var(--danger); border: 1px solid var(--ring); width: 100%; margin-top: 10px; }
-        .btn-danger-outline:hover { background: var(--danger-glow); border-color: var(--danger); }
-
         .habit-card {
-            background-color: var(--surface);
+            background: var(--surface);
             border: 1px solid var(--ring);
             border-radius: var(--radius-lg);
             padding: 24px;
-            margin-bottom: 20px;
-            animation: fadeIn 0.4s ease-out;
+            margin-bottom: 24px;
+            position: relative;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
         }
 
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-        .habit-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-        .habit-name { font-size: 1.25rem; font-weight: 700; }
-        .delete-btn { background: none; color: var(--text-muted); font-size: 1.5rem; width: 32px; height: 32px; padding: 0; }
+        .habit-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+        .habit-name { font-size: 1.4rem; font-weight: 800; }
+        .delete-btn { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 1.5rem; line-height: 1; }
         .delete-btn:hover { color: var(--danger); }
 
-        .timer-display { text-align: center; margin: 15px 0; }
-        .timer { font-size: 2.2rem; font-weight: 800; font-variant-numeric: tabular-nums; }
-        .timer span { font-size: 0.9rem; color: var(--text-muted); margin-right: 6px; }
+        .stats-row { display: flex; gap: 10px; margin-bottom: 20px; }
+        .stat-badge { background: var(--surface-raised); padding: 8px 12px; border-radius: 8px; font-size: 0.85rem; flex: 1; text-align: center; }
+        .stat-badge b { color: var(--brand); }
 
-        .streak-badge {
-            background: var(--surface-raised);
-            padding: 8px 12px;
-            border-radius: 8px;
-            display: inline-block;
-            font-size: 0.85rem;
-            margin-bottom: 15px;
-        }
-        .streak-badge b { color: var(--brand); }
+        .timer { font-size: 2.5rem; font-weight: 800; text-align: center; margin: 20px 0; font-variant-numeric: tabular-nums; text-shadow: 0 0 20px var(--brand-glow); }
+        .timer span { font-size: 0.9rem; color: var(--text-muted); margin-right: 6px; font-weight: 400; }
 
-        .milestone-container { margin-bottom: 20px; }
-        .milestone-text { display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 6px; }
-        .progress-bar { height: 6px; background: var(--surface-raised); border-radius: 3px; overflow: hidden; }
-        .progress-fill { height: 100%; background: var(--brand); width: 0%; transition: width 0.5s; }
+        .milestone-box { margin-bottom: 24px; }
+        .milestone-text { display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 8px; font-weight: 700; }
+        .progress-bg { height: 8px; background: var(--bg); border-radius: 4px; overflow: hidden; }
+        .progress-fill { height: 100%; background: linear-gradient(90deg, var(--brand), #c084fc); width: 0%; transition: width 0.5s ease; }
 
-        details { background: rgba(0,0,0,0.2); border-radius: 8px; margin-top: 10px; }
-        summary { padding: 10px; font-size: 0.85rem; cursor: pointer; color: var(--text-muted); }
-        .history-list { padding: 0 10px 10px; display: flex; flex-direction: column; gap: 8px; }
+        .action-group { display: flex; flex-direction: column; gap: 10px; }
+        .btn-action { padding: 14px; border-radius: var(--radius-md); border: none; font-weight: 700; cursor: pointer; transition: all 0.2s; }
+        .btn-success { background: var(--success); color: white; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2); }
+        .btn-danger-outline { background: transparent; border: 1px solid var(--ring); color: var(--danger); }
+        .btn-danger-outline:hover { background: var(--danger-glow); border-color: var(--danger); }
+
+        .quote-box { text-align: center; font-style: italic; color: var(--text-muted); font-size: 0.9rem; margin-top: 15px; min-height: 24px; }
+
+        details { background: rgba(0,0,0,0.3); border-radius: 12px; margin-top: 20px; }
+        summary { padding: 12px; font-size: 0.85rem; cursor: pointer; color: var(--text-muted); font-weight: 600; }
+        .history-list { padding: 0 12px 12px; display: flex; flex-direction: column; gap: 8px; }
         .history-item { font-size: 0.85rem; border-top: 1px solid var(--ring); padding-top: 8px; }
-        .history-date { color: var(--brand); font-weight: 600; font-size: 0.75rem; display: block; }
 
-        dialog { margin: auto; padding: 24px; background: var(--surface); color: white; border: 1px solid var(--ring); border-radius: 16px; width: 90%; max-width: 400px; }
-        dialog::backdrop { background: rgba(0,0,0,0.8); backdrop-filter: blur(4px); }
-        .dialog-btns { display: flex; gap: 10px; margin-top: 15px; }
-        .dialog-btns button { flex: 1; }
+        dialog { margin: auto; padding: 24px; background: var(--surface); color: white; border: 1px solid var(--ring); border-radius: 20px; width: 90%; max-width: 400px; box-shadow: 0 20px 60px rgba(0,0,0,0.6); }
+        dialog::backdrop { background: rgba(0,0,0,0.8); backdrop-filter: blur(8px); }
+        textarea { width: 100%; background: var(--bg); border: 1px solid var(--ring); border-radius: 12px; color: white; padding: 12px; margin: 15px 0; outline: none; }
     </style>
 </head>
 <body>
+
+    <canvas id="bg-canvas"></canvas>
 
     <div class="container">
         <header>
@@ -160,10 +159,11 @@
         
         <div class="glass-panel">
             <div class="input-group">
-                <input type="text" id="habitInput" placeholder="What are you quitting?" autocomplete="off">
+                <label>Goal Name</label>
+                <input type="text" id="habitInput" placeholder="Ex: No Caffeine" autocomplete="off">
             </div>
             <div class="input-group">
-                <label>Start Date & Time</label>
+                <label>Start Time</label>
                 <input type="datetime-local" id="habitStart">
             </div>
             <button class="btn-primary" onclick="addHabit()">Begin Journey</button>
@@ -173,18 +173,56 @@
     </div>
 
     <dialog id="relapseDialog">
-        <h3 style="margin-bottom: 10px; color: var(--danger);">Relapse Log</h3>
-        <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 15px;">What happened? Writing it down helps prevent it next time.</p>
-        <textarea id="relapseNote" placeholder="Notes..."></textarea>
-        <div class="dialog-btns">
-            <button class="btn-cancel" style="background: var(--surface-raised); color: white;" onclick="closeDialog()">Cancel</button>
-            <button class="btn-confirm" style="background: var(--danger); color: white;" onclick="confirmRelapse()">Reset Timer</button>
+        <h3 style="color: var(--danger);">Reset Tracker</h3>
+        <p style="font-size: 0.9rem; color: var(--text-muted);">Self-reflection builds strength. What happened?</p>
+        <textarea id="relapseNote" placeholder="Trigger/Mood..."></textarea>
+        <div style="display: flex; gap: 10px;">
+            <button class="btn-action" style="flex: 1; background: var(--surface-raised); color: white;" onclick="closeDialog()">Cancel</button>
+            <button class="btn-action" style="flex: 1; background: var(--danger); color: white;" onclick="confirmRelapse()">Confirm Reset</button>
         </div>
     </dialog>
 
     <script>
+        // BACKGROUND PARTICLES
+        const canvas = document.getElementById('bg-canvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+        function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+        window.addEventListener('resize', resize);
+        resize();
+
+        class Particle {
+            constructor() { this.reset(); }
+            reset() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.size = Math.random() * 2;
+                this.speedY = Math.random() * 0.5 + 0.1;
+                this.opacity = Math.random() * 0.5;
+            }
+            update() {
+                this.y -= this.speedY;
+                if (this.y < 0) this.reset();
+            }
+            draw() {
+                ctx.fillStyle = `rgba(129, 140, 248, ${this.opacity})`;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+        for(let i=0; i<50; i++) particles.push(new Particle());
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            particles.forEach(p => { p.update(); p.draw(); });
+            requestAnimationFrame(animate);
+        }
+        animate();
+
+        // APP LOGIC
         let habits = JSON.parse(localStorage.getItem('myHabitData')) || [];
         let activeId = null;
+        let quotes = ["Stay strong. This craving is temporary."];
         const dialog = document.getElementById('relapseDialog');
 
         const MILESTONES = [
@@ -195,54 +233,51 @@
             { label: '1 Year', ms: 31536000000 }
         ];
 
+        async function loadQuotes() {
+            try {
+                const response = await fetch('quotes.json');
+                if (response.ok) quotes = await response.json();
+            } catch (e) { console.warn("Using fallback quotes."); }
+        }
+        loadQuotes();
+
+        function triggerConfetti() {
+            confetti({ particleCount: 120, spread: 80, origin: { y: 0.7 }, colors: ['#6366f1', '#c084fc', '#10b981'] });
+        }
+
+        function hitDopamineButton(id) {
+            triggerConfetti();
+            document.getElementById(`quote-${id}`).innerHTML = `"${quotes[Math.floor(Math.random() * quotes.length)]}"`;
+        }
+
         function save() { localStorage.setItem('myHabitData', JSON.stringify(habits)); }
 
         function addHabit() {
             const name = document.getElementById('habitInput').value.trim();
             const dateStr = document.getElementById('habitStart').value;
             if (!name) return;
-
-            habits.unshift({
-                id: Date.now(),
-                name: name,
-                startTime: dateStr ? new Date(dateStr).getTime() : Date.now(),
-                bestStreak: 0,
-                history: []
-            });
-
-            save();
-            render();
+            habits.unshift({ id: Date.now(), name, startTime: dateStr ? new Date(dateStr).getTime() : Date.now(), bestStreak: 0, history: [] });
+            save(); render();
             document.getElementById('habitInput').value = '';
         }
 
         function deleteHabit(id) {
-            if (confirm("Delete this tracker?")) {
-                habits = habits.filter(h => h.id !== id);
-                save(); render();
-            }
+            if (confirm("Delete this tracker?")) { habits = habits.filter(h => h.id !== id); save(); render(); }
         }
 
         function openDialog(id) { activeId = id; dialog.showModal(); }
         function closeDialog() { dialog.close(); }
 
         function confirmRelapse() {
-            const habit = habits.find(h => h.id === activeId);
-            const note = document.getElementById('relapseNote').value;
-            const currentStreak = Date.now() - habit.startTime;
-
-            if (currentStreak > habit.bestStreak) habit.bestStreak = currentStreak;
-            
-            habit.history.unshift({
-                date: Date.now(),
-                note: note || "No notes.",
-                lostStreak: currentStreak
-            });
-
-            habit.startTime = Date.now();
+            const h = habits.find(h => h.id === activeId);
+            const diff = Date.now() - h.startTime;
+            if (diff > h.bestStreak) h.bestStreak = diff;
+            h.history.unshift({ date: Date.now(), note: document.getElementById('relapseNote').value || "No notes." });
+            h.startTime = Date.now();
             save(); render(); closeDialog();
         }
 
-        function getTimeStrings(ms) {
+        function formatTime(ms) {
             const d = Math.floor(ms / 86400000);
             const h = Math.floor((ms % 86400000) / 3600000);
             const m = Math.floor((ms % 3600000) / 60000);
@@ -252,18 +287,11 @@
 
         function updateTicks() {
             habits.forEach(h => {
-                const now = Date.now();
-                const diff = now - h.startTime;
-                
-                const timerEl = document.getElementById(`t-${h.id}`);
-                if (timerEl) timerEl.innerHTML = getTimeStrings(diff);
-
+                const diff = Date.now() - h.startTime;
+                document.getElementById(`t-${h.id}`).innerHTML = formatTime(diff);
                 const nextM = MILESTONES.find(m => m.ms > diff) || MILESTONES[MILESTONES.length-1];
-                const bar = document.getElementById(`p-${h.id}`);
-                if (bar) bar.style.width = Math.min(100, (diff / nextM.ms) * 100) + '%';
-                
-                const label = document.getElementById(`l-${h.id}`);
-                if (label) label.innerText = `Goal: ${nextM.label}`;
+                document.getElementById(`p-${h.id}`).style.width = Math.min(100, (diff / nextM.ms) * 100) + '%';
+                document.getElementById(`l-${h.id}`).innerText = `Goal: ${nextM.label}`;
             });
         }
 
@@ -275,39 +303,33 @@
                         <span class="habit-name">${h.name}</span>
                         <button class="delete-btn" onclick="deleteHabit(${h.id})">&times;</button>
                     </div>
-                    
-                    <div class="streak-badge">All-time best: <b>${Math.floor(h.bestStreak/86400000)} days</b></div>
-
-                    <div class="timer-display">
-                        <div class="timer" id="t-${h.id}">${getTimeStrings(Date.now() - h.startTime)}</div>
+                    <div class="stats-row">
+                        <div class="stat-badge">Best: <b>${Math.floor(h.bestStreak/86400000)}d</b></div>
+                        <div class="stat-badge">Resets: <b>${h.history.length}</b></div>
                     </div>
-
-                    <div class="milestone-container">
-                        <div class="milestone-text">
-                            <span id="l-${h.id}">Goal: -</span>
-                        </div>
-                        <div class="progress-bar">
-                            <div class="progress-fill" id="p-${h.id}"></div>
-                        </div>
+                    <div class="timer" id="t-${h.id}">${formatTime(Date.now() - h.startTime)}</div>
+                    <div class="milestone-box">
+                        <div class="milestone-text"><span id="l-${h.id}">Goal: -</span></div>
+                        <div class="progress-bg"><div class="progress-fill" id="p-${h.id}"></div></div>
                     </div>
-
+                    <div class="action-group">
+                        <button class="btn-action btn-success" onclick="hitDopamineButton(${h.id})">I have a craving</button>
+                        <button class="btn-action btn-danger-outline" onclick="openDialog(${h.id})">I slipped up</button>
+                    </div>
+                    <div class="quote-box" id="quote-${h.id}"></div>
                     ${h.history.length ? `
                         <details>
                             <summary>Journal (${h.history.length})</summary>
-                            <div class="history-list">
-                                ${h.history.map(e => `
-                                    <div class="history-item">
-                                        <span class="history-date">${new Date(e.date).toLocaleDateString()}</span>
-                                        ${e.note}
-                                    </div>
-                                `).join('')}
-                            </div>
+                            <div class="history-list">${h.history.map(e => `
+                                <div class="history-item">
+                                    <span style="color:var(--brand);font-size:0.75rem;display:block;">${new Date(e.date).toLocaleDateString()}</span>
+                                    ${e.note}
+                                </div>`).join('')}</div>
                         </details>
                     ` : ''}
-
-                    <button class="btn-danger-outline" onclick="openDialog(${h.id})">I Relapsed</button>
                 </div>
             `).join('');
+            updateTicks();
         }
 
         setInterval(updateTicks, 1000);
