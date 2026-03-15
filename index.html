@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Loading...</title>
+    <style>
+        /* Modern dark background so there is no white "flash" during redirect */
+        body { background-color: #0f172a; }
+    </style>
+</head>
+<body>
+    <script>
+        // Check if the key "hasVisited" exists in LocalStorage
+        const hasVisited = localStorage.getItem('hasVisited');
+
+        if (!hasVisited) {
+            // FIRST TIME: Set the flag and send them to welcome
+            localStorage.setItem('hasVisited', 'true');
+            window.location.href = "welcome.html";
+        } else {
+            // RETURNING USER: Send them straight to the tracker
+            window.location.href = "tracker.html";
+        }
+    </script>
+</body>
+</html>
